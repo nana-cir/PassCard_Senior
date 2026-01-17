@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>かんたんパスワード管理 Senior V5</title>
+<title>かんたんパスワード管理 Senior V6</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 <style>
     /* --- 基本設定 --- */
     body {
         font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
         background-color: #f4f8fb; color: #111;
-        margin: 0; padding: 15px; padding-bottom: 100px; /* 余白多めに */
+        margin: 0; padding: 15px; padding-bottom: 100px;
         line-height: 1.6; overflow-x: hidden; box-sizing: border-box;
     }
     h2 { font-size: 1.4em; margin: 0 0 15px 0; border-bottom: 3px solid #0056b3; padding-bottom: 5px; color: #0056b3; }
@@ -27,6 +27,12 @@
     .warning-box {
         background: #fff5f5; border: 2px solid #fc8181; color: #c53030;
         padding: 15px; border-radius: 8px; margin-bottom: 20px; font-weight: bold; font-size: 0.95em;
+    }
+    
+    /* --- 店員さん向けメッセージ --- */
+    .staff-msg {
+        background: #e2e8f0; color: #2d3748; padding: 15px; border-radius: 8px;
+        font-size: 0.9em; margin-top: 15px; border: 1px dashed #718096;
     }
 
     /* --- フォーム --- */
@@ -51,7 +57,7 @@
     button:active { transform: translateY(4px); box-shadow: none; }
     .btn-regist { background-color: #007bff; }
     .btn-family { background-color: #28a745; margin-top: 10px; }
-    .btn-backup { background-color: #ed8936; } /* オレンジ */
+    .btn-backup { background-color: #ed8936; } 
     .btn-del { background-color: #e53e3e; width: auto; font-size: 1em; padding: 8px 16px; margin: 0; float: right; }
     .btn-sub { background-color: #718096; } 
     .btn-auto {
@@ -116,7 +122,6 @@
     }
     #toast.show { visibility: visible; opacity: 1; }
 
-    /* 復元用のファイル入力は隠す */
     #restore-file { display: none; }
 
     @media print {
@@ -231,6 +236,12 @@
 
         <button onclick="downloadBackup()" class="btn-backup">バックアップファイルを保存</button>
         <p style="font-size:0.8em; margin:5px 0 0;">データが消えた時にこれを使うと戻ります</p>
+        
+        <div class="staff-msg">
+            <strong>店員またはご家族の方へ</strong><br>
+            定期的にクラウドサービス（Googleドライブ等）へ<br>
+            バックアップファイルを保存してください。
+        </div>
     </div>
 
     <div class="container">
@@ -240,22 +251,12 @@
 </div>
 
 <script>
-    /* 【暗号化仕様】
-    - ダブルロック方式: 
-      1. 内部マスターキー(RealKey)をランダム生成
-      2. PINでRealKeyを暗号化 -> 保存
-      3. 秘密の質問でRealKeyを暗号化 -> 保存
-      4. データはRealKeyで暗号化 -> 保存
-    これにより、PINを忘れても質問でRealKeyを取り出せる。
-    */
+    const KEY_WRAPPED_PIN = 'passV5_KeyPIN';
+    const KEY_WRAPPED_QA  = 'passV5_KeyQA';
+    const KEY_DATA_ENC    = 'passV5_Data';
+    const KEY_Q_ID        = 'passV5_Q_ID';
     
-    // 定数
-    const KEY_WRAPPED_PIN = 'passV5_KeyPIN'; // PINで包んだ鍵
-    const KEY_WRAPPED_QA  = 'passV5_KeyQA';  // 質問で包んだ鍵
-    const KEY_DATA_ENC    = 'passV5_Data';   // 暗号化されたデータ
-    const KEY_Q_ID        = 'passV5_Q_ID';   // 質問ID
-    
-    let currentRealKey = null; // メモリ上のみに存在
+    let currentRealKey = null;
 
     window.onload = function() {
         if (typeof CryptoJS === 'undefined') {
@@ -266,7 +267,6 @@
     };
 
     function checkState() {
-        // 暗号化キーがあるか確認
         if (!localStorage.getItem(KEY_WRAPPED_PIN)) {
             document.getElementById('setup-mode').style.display = 'block';
             document.getElementById('unlock-mode').style.display = 'none';
@@ -276,7 +276,6 @@
         }
     }
 
-    /* --- 暗号化ヘルパー --- */
     function encrypt(txt, pass) { return CryptoJS.AES.encrypt(txt, pass).toString(); }
     function decrypt(txt, pass) {
         try {
@@ -284,12 +283,10 @@
             return bytes.toString(CryptoJS.enc.Utf8);
         } catch(e) { return ""; }
     }
-    // ランダムな鍵生成
     function genKey() {
         return Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2);
     }
 
-    /* --- 1. セットアップ --- */
     function setupApp() {
         const pin = document.getElementById('new-pin').value;
         const q = document.getElementById('secret-q').value;
@@ -298,16 +295,13 @@
         if(pin.length < 4) { showModal("カギは数字4ケタ以上にしてください"); return; }
         if(!a) { showModal("「合言葉の答え」を入力してください"); return; }
 
-        // 内部キー生成
         const realKey = genKey();
         currentRealKey = realKey;
 
-        // 保存
-        localStorage.setItem(KEY_WRAPPED_PIN, encrypt(realKey, pin)); // PINでロック
-        localStorage.setItem(KEY_WRAPPED_QA, encrypt(realKey, a));    // 答えでロック
+        localStorage.setItem(KEY_WRAPPED_PIN, encrypt(realKey, pin));
+        localStorage.setItem(KEY_WRAPPED_QA, encrypt(realKey, a));
         localStorage.setItem(KEY_Q_ID, q);
         
-        // データ領域初期化（空リストを暗号化）
         saveList([]);
 
         showModal("設定しました！\n忘れないようにしてください。", false, function(){
@@ -315,14 +309,13 @@
         });
     }
 
-    /* --- 2. ロック解除 --- */
     function unlockApp() {
         const input = document.getElementById('input-pin').value;
         const wrapped = localStorage.getItem(KEY_WRAPPED_PIN);
         
         const key = decrypt(wrapped, input);
         if(key) {
-            currentRealKey = key; // 解錠成功
+            currentRealKey = key;
             document.getElementById('lock-screen').style.display = 'none';
             document.getElementById('app-screen').style.display = 'block';
             renderList();
@@ -333,7 +326,6 @@
         }
     }
 
-    /* --- 3. 救済（リカバリー） --- */
     function toRecoveryMode() {
         document.getElementById('unlock-mode').style.display = 'none';
         document.getElementById('recovery-mode').style.display = 'block';
@@ -359,17 +351,8 @@
         
         const key = decrypt(wrapped, inputA);
         if(key) {
-            // 解読成功！
-            // PINをリセットするため、一旦このキーを使って再セットアップのような状態にする
-            // ここでは簡易的に「PINだけ削除してリロード」ではなく
-            // 「新しいPINを設定させるフロー」が必要だが、
-            // Senior版はシンプルに「初期化画面に戻す（ただしデータは消さない）」
-            // という実装が難しい（初期化画面はデータ無しの前提で作ってあるため）。
-            
-            // なので、PIN再設定プロンプトを出す
             const newPin = prompt("正解です！新しいカギ(4ケタ)を入力してください", "");
             if(newPin && newPin.length >= 4) {
-                // 新しいPINでキーを包み直して保存
                 localStorage.setItem(KEY_WRAPPED_PIN, encrypt(key, newPin));
                 alert("新しいカギに変更しました: " + newPin);
                 location.reload();
@@ -381,7 +364,6 @@
         }
     }
 
-    /* --- データ操作 --- */
     function getList() {
         if(!currentRealKey) return [];
         const encData = localStorage.getItem(KEY_DATA_ENC);
@@ -419,16 +401,7 @@
         showModal("保存しました！");
     }
 
-    /* --- バックアップ & 復元 --- */
     function downloadBackup() {
-        // 全データをJSONで書き出す（暗号化された状態ではなく、復元用に生データを出すべきか？
-        // 安全のため、ここでも「バックアップファイル自体」を暗号化すべきだが、
-        // 復元時にパスワードが必要になる。
-        // シンプルに「現在のRealKeyで暗号化されたままのダンプ」を出力し、
-        // 復元時に「PIN」を聞くのが安全。
-        
-        // 構成: { pinEnc: xxx, qaEnc: xxx, dataEnc: xxx, qId: xxx }
-        // これを丸ごと保存すれば、環境復元できる。
         const dump = {
             pin: localStorage.getItem(KEY_WRAPPED_PIN),
             qa:  localStorage.getItem(KEY_WRAPPED_QA),
@@ -471,8 +444,6 @@
         reader.readAsText(file);
     }
 
-
-    /* --- 表示・その他 --- */
     function renderList() {
         const list = getList();
         document.getElementById('count').innerText = list.length;
@@ -572,8 +543,7 @@
             btnNo.className = 'btn-modal btn-modal-cancel';
             btnNo.innerText = 'いいえ';
             btnNo.onclick = function() { overlay.style.display = 'none'; };
-            btnsDiv.appendChild(btnNo);
-            btnsDiv.appendChild(btnYes);
+            btnsDiv.appendChild(btnNo); btnsDiv.appendChild(btnYes);
         } else {
             const btnOk = document.createElement('button');
             btnOk.className = 'btn-modal btn-regist';
@@ -583,6 +553,8 @@
         }
         overlay.style.display = 'flex';
     }
+    window.onbeforeprint = function() { document.querySelectorAll('.masked-pass').forEach(e => e.style.display = 'none'); document.querySelectorAll('.print-show').forEach(e => e.style.display = 'inline'); };
+    window.onafterprint = function() { document.querySelectorAll('.masked-pass').forEach(e => e.style.display = 'block'); document.querySelectorAll('.print-show').forEach(e => e.style.display = 'none'); };
 </script>
 </body>
 </html>
