@@ -3,46 +3,186 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>かんたんパスワード管理 Senior V6.1</title>
+<title>かんたんパスワード管理 Senior V7</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", Meiryo, sans-serif; background-color: #f4f8fb; color: #111; margin: 0; padding: 15px; padding-bottom: 100px; line-height: 1.6; overflow-x: hidden; box-sizing: border-box; }
+    /* --- 基本設定 --- */
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+        background-color: #f4f8fb; color: #111;
+        margin: 0; padding: 15px; padding-bottom: 100px;
+        line-height: 1.6; overflow-x: hidden; box-sizing: border-box;
+    }
     h2 { font-size: 1.4em; margin: 0 0 15px 0; border-bottom: 3px solid #0056b3; padding-bottom: 5px; color: #0056b3; }
     p { font-size: 1.1em; margin-bottom: 20px; }
+
+    /* --- コンテナ --- */
     .container { width: 100%; max-width: 600px; margin: 0 auto; }
-    .card { background: #ffffff; border: 2px solid #cbd5e0; border-radius: 12px; padding: 20px; margin-bottom: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-    .warning-box { background: #fff5f5; border: 2px solid #fc8181; color: #c53030; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-weight: bold; font-size: 0.95em; }
-    .staff-msg { background: #e2e8f0; color: #2d3748; padding: 15px; border-radius: 8px; font-size: 0.9em; margin-top: 15px; border: 1px dashed #718096; }
-    label { display: block; font-weight: bold; font-size: 1.1em; margin-bottom: 8px; color: #2d3748; background: #e6f2ff; padding: 8px 10px; border-radius: 6px; border-left: 6px solid #0056b3; }
-    input[type="text"], input[type="number"], input[type="file"], select { width: 100%; padding: 16px; font-size: 1.2em; border: 2px solid #a0aec0; border-radius: 8px; box-sizing: border-box; margin-bottom: 25px; background: #fff; appearance: none; }
+    
+    /* --- ヘッダー --- */
+    .app-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .help-btn { 
+        background: white; border: 2px solid #0056b3; color: #0056b3; 
+        border-radius: 50%; width: 35px; height: 35px; font-weight: bold; cursor: pointer;
+        font-size: 1.2em; display:flex; justify-content:center; align-items:center;
+    }
+
+    .card {
+        background: #ffffff; border: 2px solid #cbd5e0; border-radius: 12px;
+        padding: 20px; margin-bottom: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }
+    .warning-box {
+        background: #fff5f5; border: 2px solid #fc8181; color: #c53030;
+        padding: 15px; border-radius: 8px; margin-bottom: 20px; font-weight: bold; font-size: 0.95em;
+    }
+    .staff-msg {
+        background: #e2e8f0; color: #2d3748; padding: 15px; border-radius: 8px;
+        font-size: 0.9em; margin-top: 15px; border: 1px dashed #718096;
+    }
+    label {
+        display: block; font-weight: bold; font-size: 1.1em; margin-bottom: 8px;
+        color: #2d3748; background: #e6f2ff; padding: 8px 10px;
+        border-radius: 6px; border-left: 6px solid #0056b3;
+    }
+    input[type="text"], input[type="number"], input[type="file"], select {
+        width: 100%; padding: 16px; font-size: 1.2em;
+        border: 2px solid #a0aec0; border-radius: 8px; box-sizing: border-box;
+        margin-bottom: 25px; background: #fff; appearance: none;
+    }
     input:focus { border-color: #0056b3; background: #fffaf0; outline: none; }
-    button { cursor: pointer; padding: 18px; border: none; border-radius: 10px; font-size: 1.2em; font-weight: bold; width: 100%; margin-bottom: 15px; color: white; box-shadow: 0 4px 0 rgba(0,0,0,0.2); transition: transform 0.1s; }
+
+    button {
+        cursor: pointer; padding: 18px; border: none; border-radius: 10px;
+        font-size: 1.2em; font-weight: bold; width: 100%; margin-bottom: 15px;
+        color: white; box-shadow: 0 4px 0 rgba(0,0,0,0.2); transition: transform 0.1s;
+    }
     button:active { transform: translateY(4px); box-shadow: none; }
-    .btn-regist { background-color: #007bff; } .btn-family { background-color: #28a745; margin-top: 10px; } .btn-backup { background-color: #ed8936; } .btn-del { background-color: #e53e3e; width: auto; font-size: 1em; padding: 8px 16px; margin: 0; float: right; } .btn-sub { background-color: #718096; } .btn-auto { width: 130px; padding: 10px; font-size: 1em; background: #edf2f7; color: #000; border: 2px solid #cbd5e0; margin: 0; box-shadow: none; }
-    .item-card { background: #fff; border: 2px solid #a0aec0; border-radius: 10px; padding: 20px; margin-bottom: 20px; position: relative; }
-    .item-title-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+    .btn-regist { background-color: #007bff; }
+    .btn-family { background-color: #28a745; margin-top: 10px; }
+    .btn-backup { background-color: #ed8936; } 
+    .btn-del { background-color: #e53e3e; width: auto; font-size: 1em; padding: 8px 16px; margin: 0; float: right; }
+    .btn-sub { background-color: #718096; } 
+    .btn-auto {
+        width: 130px; padding: 10px; font-size: 1em;
+        background: #edf2f7; color: #000; border: 2px solid #cbd5e0;
+        margin: 0; box-shadow: none;
+    }
+
+    .item-card {
+        background: #fff; border: 2px solid #a0aec0; border-radius: 10px;
+        padding: 20px; margin-bottom: 20px; position: relative;
+    }
+    .item-title-row {
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 10px;
+    }
     .item-name { font-size: 1.3em; font-weight: bold; color: #2b6cb0; word-break: break-all; }
-    .legacy-info { background: #fffaf0; border: 1px solid #fbd38d; color: #975a16; padding: 10px; border-radius: 6px; font-weight: bold; margin-bottom: 15px; }
-    .data-row { background: #f7fafc; border: 1px solid #e2e8f0; padding: 12px; margin-bottom: 12px; font-size: 1.2em; font-family: monospace; display: flex; justify-content: space-between; align-items: center; border-radius: 6px; cursor: pointer; }
+    .legacy-info {
+        background: #fffaf0; border: 1px solid #fbd38d; color: #975a16;
+        padding: 10px; border-radius: 6px; font-weight: bold; margin-bottom: 15px;
+    }
+    .data-row {
+        background: #f7fafc; border: 1px solid #e2e8f0; padding: 12px;
+        margin-bottom: 12px; font-size: 1.2em; font-family: monospace;
+        display: flex; justify-content: space-between; align-items: center;
+        border-radius: 6px; cursor: pointer;
+    }
     .copy-hint { font-size: 0.7em; color: #718096; margin-left: 10px; font-family: sans-serif; }
-    #lock-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #f4f8fb; z-index: 9000; display: flex; flex-direction: column; justify-content: center; align-items: center; overflow-y: auto; }
-    .lock-card { width: 85%; max-width: 400px; text-align: center; background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 2px solid #cbd5e0; margin: 20px 0; }
-    #custom-modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 10000; justify-content: center; align-items: center; }
-    #custom-modal { background: white; padding: 25px; width: 85%; max-width: 400px; border-radius: 15px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+
+    #lock-screen {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: #f4f8fb; z-index: 9000;
+        display: flex; flex-direction: column; justify-content: center; align-items: center; overflow-y: auto;
+    }
+    .lock-card {
+        width: 85%; max-width: 400px; text-align: center;
+        background: #fff; padding: 25px; border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 2px solid #cbd5e0; margin: 20px 0;
+    }
+
+    /* --- ヘルプモーダル --- */
+    #help-modal-overlay {
+        display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.6); z-index: 9999;
+        justify-content: center; align-items: flex-start; overflow-y: auto; padding-top: 30px;
+    }
+    #help-content {
+        background: #fff; width: 90%; max-width: 500px; padding: 20px; border-radius: 12px;
+        margin-bottom: 50px;
+    }
+    .help-title { color: #0056b3; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 15px; font-size: 1.4em; font-weight:bold; }
+    .help-section { margin-bottom: 20px; text-align: left; }
+    .help-h { font-weight: bold; margin-bottom: 5px; color: #333; font-size:1.1em; background:#e6f2ff; padding:5px 10px; border-radius:5px;}
+    .help-p { color: #555; font-size: 1em; line-height: 1.6; padding-left:5px; }
+
+    #custom-modal-overlay {
+        display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.6); z-index: 10000; justify-content: center; align-items: center;
+    }
+    #custom-modal {
+        background: white; padding: 25px; width: 85%; max-width: 400px;
+        border-radius: 15px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    }
     #modal-msg { font-size: 1.2em; margin-bottom: 25px; font-weight: bold; line-height: 1.5; }
     .modal-btn-row { display: flex; gap: 10px; justify-content: center; }
     .btn-modal { padding: 12px; font-size: 1em; margin: 0; width: 100%; border-radius: 8px; }
     .btn-modal-cancel { background: #718096; }
-    #toast { visibility: hidden; min-width: 200px; background-color: #333; color: #fff; text-align: center; border-radius: 50px; padding: 16px; position: fixed; z-index: 10001; bottom: 30px; left: 50%; transform: translateX(-50%); font-size: 1.1em; font-weight: bold; opacity: 0; transition: opacity 0.3s; }
+
+    #toast {
+        visibility: hidden; min-width: 200px; background-color: #333; color: #fff;
+        text-align: center; border-radius: 50px; padding: 16px;
+        position: fixed; z-index: 10001; bottom: 30px; left: 50%; transform: translateX(-50%);
+        font-size: 1.1em; font-weight: bold; opacity: 0; transition: opacity 0.3s;
+    }
     #toast.show { visibility: visible; opacity: 1; }
+
     #restore-file { display: none; }
-    @media print { @page { margin: 15mm; size: auto; } body { background: white; font-size: 12pt; padding: 0; } .no-print, header, button, .copy-hint, .eye-icon, .warning-box { display: none !important; } .card { border: none; box-shadow: none; margin: 0; padding: 0; } .item-card { border: 1px solid #000; break-inside: avoid; margin-bottom: 15px; } .legacy-info { border: 1px solid #000; color: #000; background: none; } .masked-pass { display: none !important; } .real-pass { display: inline !important; } h2 { border-bottom: 1px solid #000; color: #000; } }
+
+    @media print {
+        @page { margin: 15mm; size: auto; }
+        body { background: white; font-size: 12pt; padding: 0; }
+        .no-print, header, button, .copy-hint, .eye-icon, .warning-box, .app-header { display: none !important; }
+        .card { border: none; box-shadow: none; margin: 0; padding: 0; }
+        .item-card { border: 1px solid #000; break-inside: avoid; margin-bottom: 15px; }
+        .legacy-info { border: 1px solid #000; color: #000; background: none; }
+        .masked-pass { display: none !important; }
+        .real-pass { display: inline !important; }
+        h2 { border-bottom: 1px solid #000; color: #000; }
+    }
 </style>
 </head>
 <body>
 
 <div id="custom-modal-overlay"><div id="custom-modal"><div id="modal-msg">MESSAGE</div><div class="modal-btn-row" id="modal-btns"></div></div></div>
 <div id="toast">コピーしました</div>
+
+<div id="help-modal-overlay">
+    <div id="help-content">
+        <div class="help-title">使い方ガイド</div>
+        
+        <div class="help-section">
+            <div class="help-h">データはどこ？</div>
+            <div class="help-p">
+                スマホの中に暗号化して保存されています。<br>
+                <span style="color:#d9534f; font-weight:bold;">※「履歴削除」で消えてしまいます！</span>
+            </div>
+        </div>
+        <div class="help-section">
+            <div class="help-h">バックアップ（重要）</div>
+            <div class="help-p">
+                <strong>[バックアップファイルを保存]</strong> ボタンを押して、Googleドライブやファイルに保存してください。<br>
+                これがあれば、データが消えても元に戻せます。
+            </div>
+        </div>
+        <div class="help-section">
+            <div class="help-h">復元するには</div>
+            <div class="help-p">
+                最初の画面の「バックアップから復元」ボタンから、保存したファイルを読み込んでください。
+            </div>
+        </div>
+        <button onclick="document.getElementById('help-modal-overlay').style.display='none'" style="background:#444; margin-top:10px;">閉じる</button>
+    </div>
+</div>
 
 <div id="lock-screen">
     <div class="lock-card">
@@ -51,16 +191,24 @@
         <div id="setup-mode" style="display:none;">
             <p style="text-align:left; font-weight:bold; margin-bottom:5px;">① カギ（数字4ケタ）を決める</p>
             <input type="number" id="new-pin" placeholder="1234" style="text-align:center;">
+            
             <p style="text-align:left; font-weight:bold; margin-bottom:5px; margin-top:20px;">② 忘れた時の「合言葉」</p>
-            <p style="font-size:0.85em; color:#d9534f; margin-bottom:10px; text-align:left;">※カギを忘れても、これで開けられます。</p>
+            <p style="font-size:0.85em; color:#d9534f; margin-bottom:10px; text-align:left;">
+                ※カギを忘れても、これで開けられます。
+            </p>
             <select id="secret-q" style="margin-bottom:10px;">
-                <option value="mom">母親の旧姓は？</option><option value="school">通っていた小学校は？</option><option value="food">一番好きな食べ物は？</option><option value="pet">最初のペットの名前は？</option>
+                <option value="mom">母親の旧姓は？</option>
+                <option value="school">通っていた小学校は？</option>
+                <option value="food">一番好きな食べ物は？</option>
+                <option value="pet">最初のペットの名前は？</option>
             </select>
             <input type="text" id="secret-a" placeholder="答え（ひらがながおすすめ）">
+
             <button onclick="setupApp()" class="btn-regist">設定して始める</button>
+            
             <hr style="margin:20px 0;">
             <p style="font-size:0.9em; font-weight:bold;">以前のバックアップをお持ちですか？</p>
-            <button onclick="document.getElementById('restore-file').click()" class="btn-backup" style="font-size:1em; padding:12px;">ファイルを読み込んで復元</button>
+            <button onclick="document.getElementById('restore-file').click()" class="btn-backup" style="font-size:1em; padding:12px;">バックアップから復元</button>
             <input type="file" id="restore-file" accept=".json" onchange="restoreFromFile(this)">
         </div>
 
@@ -68,7 +216,9 @@
             <p>カギ（数字4ケタ）を入れてください</p>
             <input type="number" id="input-pin" placeholder="****" style="text-align:center; font-size:1.5em; letter-spacing:5px;">
             <button onclick="unlockApp()" class="btn-regist">開く</button>
-            <p style="margin-top:20px; font-size:0.9em; text-decoration:underline; color:#718096; cursor:pointer;" onclick="toRecoveryMode()">カギを忘れましたか？</p>
+            <p style="margin-top:20px; font-size:0.9em; text-decoration:underline; color:#718096; cursor:pointer;" onclick="toRecoveryMode()">
+                カギを忘れましたか？
+            </p>
         </div>
 
         <div id="recovery-mode" style="display:none;">
@@ -83,16 +233,35 @@
 </div>
 
 <div id="app-screen" class="container" style="display:none;">
-    <div class="warning-box no-print">⚠️ データが消えるのを防ぐために<br>定期的に下の「バックアップ」ボタンを押して、データをファイルとして保存してください。</div>
     
+    <div class="app-header">
+        <h2 style="margin:0; border:none; font-size:1.5em;">パスワード管理</h2>
+        <button class="help-btn" onclick="document.getElementById('help-modal-overlay').style.display='flex'">？</button>
+    </div>
+
+    <div class="warning-box no-print">
+        ⚠️ データが消えるのを防ぐために<br>
+        定期的に下の「バックアップ」ボタンを押して、データをファイルとして保存してください。
+    </div>
+
     <div class="card no-print">
         <h2>新しいパスワードを登録</h2>
-        <label>サービス名</label><input type="text" id="service-name" placeholder="例：ドコモ、楽天、銀行">
-        <label>ID（メールや番号）</label><input type="text" id="service-id" list="id-history" placeholder="タップすると履歴が出ます"><datalist id="id-history"></datalist>
+        <label>サービス名</label>
+        <input type="text" id="service-name" placeholder="例：ドコモ、楽天、銀行">
+        <label>ID（メールや番号）</label>
+        <input type="text" id="service-id" list="id-history" placeholder="タップすると履歴が出ます">
+        <datalist id="id-history"></datalist>
         <label>パスワード</label>
-        <div style="display:flex; gap:10px; align-items:center; margin-bottom:25px;"><input type="text" id="service-pass" placeholder="パスワード" style="margin-bottom:0;"><button onclick="genPass()" class="btn-auto">自動生成</button></div>
+        <div style="display:flex; gap:10px; align-items:center; margin-bottom:25px;">
+            <input type="text" id="service-pass" placeholder="パスワード" style="margin-bottom:0;">
+            <button onclick="genPass()" class="btn-auto">自動生成</button>
+        </div>
         <label>もしもの時、どうしますか？</label>
-        <select id="legacy-action"><option value="家族に任せる">家族に任せる</option><option value="解約（親族にて）してください">解約（親族にて）してください</option><option value="解約（第三者にて）解約してください">解約（第三者にて）解約してください</option></select>
+        <select id="legacy-action">
+            <option value="家族に任せる">家族に任せる</option>
+            <option value="解約（親族にて）してください">解約（親族にて）してください</option>
+            <option value="解約（第三者にて）解約してください">解約（第三者にて）解約してください</option>
+        </select>
         <button onclick="saveData()" class="btn-regist">保存する</button>
     </div>
 
@@ -102,17 +271,24 @@
         <p style="font-size:0.8em; margin:5px 0 15px;">紙に印刷したり、家族に送れます</p>
         <button onclick="downloadBackup()" class="btn-backup">バックアップファイルを保存</button>
         <p style="font-size:0.8em; margin:5px 0 0;">データが消えた時にこれを使うと戻ります</p>
-        <div class="staff-msg"><strong>店員またはご家族の方へ</strong><br>定期的にクラウドサービス（Googleドライブ等）へ<br>バックアップファイルを保存してください。</div>
+        <div class="staff-msg">
+            <strong>店員またはご家族の方へ</strong><br>
+            定期的にクラウドサービス（Googleドライブ等）へ<br>
+            バックアップファイルを保存してください。
+        </div>
     </div>
 
-    <div class="container"><h2 style="margin-top:30px;">登録済みリスト（<span id="count">0</span>件）</h2><div id="list-container"></div></div>
+    <div class="container">
+        <h2 style="margin-top:30px;">登録済みリスト（<span id="count">0</span>件）</h2>
+        <div id="list-container"></div>
+    </div>
 </div>
 
 <script>
-    const KEY_WRAPPED_PIN = 'passSeniorV6_KeyPIN'; 
-    const KEY_WRAPPED_QA  = 'passSeniorV6_KeyQA';
-    const KEY_DATA_ENC    = 'passSeniorV6_Data';
-    const KEY_Q_ID        = 'passSeniorV6_Q_ID';
+    const KEY_WRAPPED_PIN = 'passSeniorV7_KeyPIN'; 
+    const KEY_WRAPPED_QA  = 'passSeniorV7_KeyQA';
+    const KEY_DATA_ENC    = 'passSeniorV7_Data';
+    const KEY_Q_ID        = 'passSeniorV7_Q_ID';
     
     let currentRealKey = null;
 
@@ -142,12 +318,14 @@
         const a = document.getElementById('secret-a').value;
         if(pin.length < 4) { showModal("カギは数字4ケタ以上にしてください"); return; }
         if(!a) { showModal("「合言葉の答え」を入力してください"); return; }
-        const realKey = genKey(); currentRealKey = realKey;
-        localStorage.setItem(KEY_WRAPPED_PIN, encrypt(realKey, pin));
-        localStorage.setItem(KEY_WRAPPED_QA, encrypt(realKey, a));
-        localStorage.setItem(KEY_Q_ID, q);
-        saveList([]);
-        showModal("設定しました！\n忘れないようにしてください。", false, function(){ location.reload(); });
+        showModal("設定しますか？\n(忘れないようにしてください)", true, function(){
+            const realKey = genKey(); currentRealKey = realKey;
+            localStorage.setItem(KEY_WRAPPED_PIN, encrypt(realKey, pin));
+            localStorage.setItem(KEY_WRAPPED_QA, encrypt(realKey, a));
+            localStorage.setItem(KEY_Q_ID, q);
+            saveList([]);
+            showModal("設定しました！\n忘れないようにしてください。", false, function(){ location.reload(); });
+        });
     }
 
     function unlockApp() {
@@ -210,13 +388,30 @@
         uniqueIds.forEach(id => { const opt = document.createElement('option'); opt.value = id; datalist.appendChild(opt); });
     }
 
-    function downloadBackup() {
+    /* バックアップ（シェア機能付き） */
+    async function downloadBackup() {
         const dump = { pin: localStorage.getItem(KEY_WRAPPED_PIN), qa: localStorage.getItem(KEY_WRAPPED_QA), data: localStorage.getItem(KEY_DATA_ENC), qid: localStorage.getItem(KEY_Q_ID) };
-        const blob = new Blob([JSON.stringify(dump)], {type: "application/json"});
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a'); a.href = url; a.download = "passcard_senior_backup.json"; a.click();
-        showModal("バックアップファイルを保存しました。\n大切に保管してください。");
+        const jsonStr = JSON.stringify(dump);
+        const file = new File([jsonStr], "passcard_senior_backup.json", {type: "application/json"});
+
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            try {
+                await navigator.share({
+                    files: [file],
+                    title: 'PassCard Backup',
+                    text: 'PassCardのバックアップファイルです。'
+                });
+            } catch (error) {
+                const url = URL.createObjectURL(file);
+                const a = document.createElement('a'); a.href = url; a.download = "passcard_senior_backup.json"; a.click();
+            }
+        } else {
+            const url = URL.createObjectURL(file);
+            const a = document.createElement('a'); a.href = url; a.download = "passcard_senior_backup.json"; a.click();
+            showModal("バックアップファイルを保存しました。\n大切に保管してください。");
+        }
     }
+
     function restoreFromFile(input) {
         const file = input.files[0]; if(!file) return;
         const reader = new FileReader();
