@@ -5,20 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>かんたんパスワード管理 Senior</title>
 <style>
-    /* --- 基本設定（スマホ対応・崩れ防止） --- */
+    /* --- 基本設定 --- */
     body {
         font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
         background-color: #f4f8fb; color: #111;
         margin: 0; padding: 15px; padding-bottom: 80px;
         line-height: 1.6;
-        overflow-x: hidden; /* 横揺れ防止 */
-        box-sizing: border-box;
+        overflow-x: hidden; box-sizing: border-box;
     }
 
     h2 { font-size: 1.4em; margin: 0 0 15px 0; border-bottom: 3px solid #0056b3; padding-bottom: 5px; color: #0056b3; }
     p { font-size: 1.1em; margin-bottom: 20px; }
 
-    /* --- コンテナ類 --- */
+    /* --- コンテナ --- */
     .container { width: 100%; max-width: 600px; margin: 0 auto; }
     
     .card {
@@ -262,7 +261,7 @@
         updateIdList(); // ID履歴の読み込み
     }
 
-    /* --- モーダル表示 --- */
+    /* --- モーダル表示 (修正済: OKボタンでコールバック実行) --- */
     function showModal(msg, isConfirm = false, yesCallback = null) {
         const overlay = document.getElementById('custom-modal-overlay');
         const msgDiv = document.getElementById('modal-msg');
@@ -285,10 +284,14 @@
             btnsDiv.appendChild(btnNo);
             btnsDiv.appendChild(btnYes);
         } else {
+            // Alertモード（ここを修正しました）
             const btnOk = document.createElement('button');
             btnOk.className = 'btn-modal btn-regist';
             btnOk.innerText = 'OK';
-            btnOk.onclick = function() { overlay.style.display = 'none'; };
+            btnOk.onclick = function() { 
+                overlay.style.display = 'none'; 
+                if(yesCallback) yesCallback(); // ←ここ！コールバックがあれば実行する
+            };
             btnsDiv.appendChild(btnOk);
         }
         overlay.style.display = 'flex';
@@ -308,7 +311,7 @@
         localStorage.setItem(KEY_A, a);
 
         showModal("設定しました！\n忘れないようにしてください。", false, function(){
-            location.reload();
+            location.reload(); // これが確実に動くようになります
         });
     }
 
