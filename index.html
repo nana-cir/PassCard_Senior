@@ -3,118 +3,255 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>かんたんパスワード管理 v2</title>
+<title>かんたんパスワード管理 Senior</title>
 <style>
-    /* --- 基本デザイン（見やすさ優先） --- */
-    body { font-family: sans-serif; background-color: #f0f4f8; color: #111; margin: 0; padding: 15px; }
-    h2 { color: #0056b3; border-bottom: 2px solid #0056b3; }
-    .card { background: #fff; border: 2px solid #ccc; border-radius: 12px; padding: 20px; margin-bottom: 30px; }
-    
-    label { display: block; font-weight: bold; margin-bottom: 5px; background: #e6f2ff; padding: 5px; border-left: 5px solid #0056b3; }
-    input, select { width: 100%; padding: 15px; font-size: 1.2em; border: 2px solid #888; border-radius: 8px; margin-bottom: 15px; box-sizing: border-box; }
-    
-    button { width: 100%; padding: 15px; font-size: 1.2em; border: none; border-radius: 10px; color: white; margin-bottom: 15px; cursor: pointer; }
-    .btn-main { background-color: #007bff; }
-    .btn-sub { background-color: #6c757d; }
-    .btn-alert { background-color: #d9534f; margin-top: 20px; }
+    /* --- ユニバーサルデザイン（見やすさ重視） --- */
+    body {
+        font-family: "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
+        background-color: #f4f8fb;
+        color: #111;
+        margin: 0;
+        padding: 15px;
+        line-height: 1.6;
+        padding-bottom: 80px; /* 下部の余白 */
+    }
 
-    /* ロック画面用 */
-    #lock-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #f0f4f8; z-index: 999; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;}
-    .lock-box { background: white; padding: 20px; border-radius: 10px; width: 100%; max-width: 400px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center; }
+    h2 { font-size: 1.4em; margin: 0 0 15px 0; border-bottom: 3px solid #0056b3; padding-bottom: 5px; color: #0056b3; }
+    p { font-size: 1.1em; margin-bottom: 20px; }
 
-    /* リスト用 */
-    .item-card { background: #fff; border: 2px solid #aaa; border-radius: 10px; padding: 15px; margin-bottom: 15px; }
-    .data-row { background: #f9f9f9; border: 1px solid #ddd; padding: 10px; font-size: 1.2em; display: flex; justify-content: space-between; align-items: center; overflow: hidden;}
+    /* --- カードスタイル --- */
+    .card {
+        background: #ffffff;
+        border: 2px solid #cbd5e0;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }
+
+    /* --- 入力フォーム --- */
+    label {
+        display: block;
+        font-weight: bold;
+        font-size: 1.1em;
+        margin-bottom: 8px;
+        color: #2d3748;
+        background: #e6f2ff;
+        padding: 8px 10px;
+        border-radius: 6px;
+        border-left: 6px solid #0056b3;
+    }
     
-    @media print { .no-print { display: none; } .card { border: none; } }
+    input[type="text"], input[type="number"], select {
+        width: 100%;
+        padding: 16px;
+        font-size: 1.2em;
+        border: 2px solid #a0aec0;
+        border-radius: 8px;
+        box-sizing: border-box;
+        margin-bottom: 25px;
+        background: #fff;
+        appearance: none; /* iOSでの見た目を標準化 */
+    }
+    input:focus { border-color: #0056b3; background: #fffaf0; outline: none; }
+
+    /* --- ボタン --- */
+    button {
+        cursor: pointer;
+        padding: 18px;
+        border: none;
+        border-radius: 10px;
+        font-size: 1.2em;
+        font-weight: bold;
+        width: 100%;
+        margin-bottom: 15px;
+        color: white;
+        box-shadow: 0 4px 0 rgba(0,0,0,0.2);
+        transition: transform 0.1s;
+    }
+    button:active { transform: translateY(4px); box-shadow: none; }
+
+    .btn-regist { background-color: #007bff; }
+    .btn-family { background-color: #28a745; margin-top: 10px; }
+    .btn-del { background-color: #e53e3e; width: auto; font-size: 1em; padding: 8px 16px; margin: 0; float: right; }
+    
+    /* 自動生成ボタン（修正：黒文字で見やすく） */
+    .btn-auto {
+        width: 130px;
+        padding: 10px;
+        font-size: 1em;
+        background: #edf2f7; /* 明るいグレー */
+        color: #000;         /* 黒文字 */
+        border: 2px solid #cbd5e0;
+        margin: 0;
+        box-shadow: none;
+    }
+
+    /* --- リスト表示 --- */
+    .item-card {
+        background: #fff;
+        border: 2px solid #a0aec0;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        position: relative;
+    }
+    
+    .item-title-row {
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 10px;
+    }
+    .item-name { font-size: 1.3em; font-weight: bold; color: #2b6cb0; }
+
+    .data-row {
+        background: #f7fafc;
+        border: 1px solid #e2e8f0;
+        padding: 12px;
+        margin-bottom: 12px;
+        font-size: 1.2em;
+        font-family: monospace;
+        display: flex; justify-content: space-between; align-items: center;
+        border-radius: 6px;
+        cursor: pointer; /* タップできる感 */
+    }
+    .data-row:active { background: #ebf8ff; }
+
+    .copy-hint { font-size: 0.7em; color: #718096; margin-left: 10px; font-family: sans-serif; }
+
+    /* 終活・意向表示エリア */
+    .legacy-info {
+        background: #fffaf0;
+        border: 1px solid #fbd38d;
+        color: #975a16;
+        padding: 10px;
+        border-radius: 6px;
+        font-weight: bold;
+        margin-bottom: 15px;
+    }
+
+    /* --- カスタムモーダル（URL非表示用） --- */
+    #custom-modal-overlay {
+        display: none;
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.6); z-index: 10000;
+        justify-content: center; align-items: center;
+    }
+    #custom-modal {
+        background: white; padding: 25px; width: 85%; max-width: 400px;
+        border-radius: 15px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    }
+    #modal-msg { font-size: 1.2em; margin-bottom: 25px; font-weight: bold; }
+    .modal-btn-row { display: flex; gap: 10px; justify-content: center; }
+    .btn-modal { padding: 12px; font-size: 1em; margin: 0; width: 100%; }
+    .btn-cancel { background: #718096; }
+
+    /* --- 通知トースト --- */
+    #toast {
+        visibility: hidden; min-width: 250px; background-color: #333; color: #fff;
+        text-align: center; border-radius: 50px; padding: 16px;
+        position: fixed; z-index: 10001; bottom: 30px; left: 50%; transform: translateX(-50%);
+        font-size: 1.1em; font-weight: bold; opacity: 0; transition: opacity 0.3s;
+    }
+    #toast.show { visibility: visible; opacity: 1; }
+
+    /* --- 印刷・家族共有モード --- */
+    @media print {
+        @page { margin: 15mm; size: auto; } /* ヘッダー削除の試み */
+        body { background: white; font-size: 12pt; padding: 0; }
+        .no-print { display: none !important; }
+        .card { border: none; box-shadow: none; margin: 0; padding: 0; }
+        .item-card { border: 1px solid #000; break-inside: avoid; margin-bottom: 15px; page-break-inside: avoid; }
+        .legacy-info { border: 1px solid #000; color: #000; background: none; }
+        /* 印刷時はパスワードを強制表示 */
+        .masked-pass { display: none !important; }
+        .real-pass { display: inline !important; }
+        .eye-icon { display: none !important; }
+        h2 { border-bottom: 1px solid #000; color: #000; }
+        button { display: none; }
+    }
 </style>
 </head>
 <body>
 
-<div id="lock-screen">
-    <div class="lock-box">
-        <h2 style="margin-top:0;">パスワード管理帳</h2>
+<div id="custom-modal-overlay">
+    <div id="custom-modal">
+        <div id="modal-msg">メッセージ</div>
+        <div class="modal-btn-row" id="modal-btns">
+            </div>
+    </div>
+</div>
+
+<div id="toast">コピーしました</div>
+
+<div id="lock-screen" style="position:fixed; top:0; left:0; width:100%; height:100%; background:#f4f8fb; z-index:9000; display:flex; flex-direction:column; justify-content:center; align-items:center;">
+    <div class="card" style="width:85%; max-width:350px; text-align:center;">
+        <h2 style="border:none;">パスワード管理</h2>
         
         <div id="setup-mode" style="display:none;">
             <p>最初に「カギ」を決めましょう</p>
-            <input type="number" id="new-pin" placeholder="数字4ケタ (例: 1234)" style="text-align:center;">
-            
-            <p style="text-align:left; font-size:0.9em; margin-top:20px;">
-                <strong>※重要：忘れた時のための「秘密の質問」</strong><br>
-                昔から変わらないことを登録してください。
-            </p>
-            <select id="secret-q">
-                <option value="mom">母親の旧姓は？</option>
-                <option value="school">通っていた小学校の名前は？</option>
-                <option value="food">一番好きな食べ物は？</option>
-                <option value="pet">初めて飼ったペットの名前は？</option>
-            </select>
-            <input type="text" id="secret-a" placeholder="答え（ひらがな推奨）">
-
-            <button onclick="setupApp()" class="btn-main">これで始める</button>
+            <input type="number" id="new-pin" placeholder="数字4ケタ (例: 1234)" style="text-align:center; margin-bottom:10px;">
+            <p style="font-size:0.9em; color:#d9534f; text-align:left;">※忘れると開けなくなります。<br>紙にメモしておいてください。</p>
+            <button onclick="setupApp()" class="btn-regist">設定して始める</button>
         </div>
 
         <div id="unlock-mode" style="display:none;">
             <p>カギ（数字4ケタ）を入れてください</p>
-            <input type="number" id="input-pin" placeholder="****" style="text-align:center;">
-            <button onclick="unlockApp()" class="btn-main">開く</button>
-            
-            <p style="margin-top:20px; color:#d9534f; text-decoration:underline; cursor:pointer;" onclick="showRecovery()">
-                カギを忘れましたか？
+            <input type="number" id="input-pin" placeholder="****" style="text-align:center; font-size:1.5em; letter-spacing:5px;">
+            <button onclick="unlockApp()" class="btn-regist">開く</button>
+            <p style="margin-top:20px; font-size:0.9em; text-decoration:underline; color:#718096; cursor:pointer;" onclick="resetConfirm()">
+                カギを忘れましたか？<br>(全データを削除して初期化)
             </p>
-        </div>
-
-        <div id="recovery-mode" style="display:none;">
-            <h3 style="color:#d9534f;">カギの再発行</h3>
-            <p id="recovery-q-text" style="font-weight:bold;">質問</p>
-            <input type="text" id="recovery-a" placeholder="答えを入力">
-            <button onclick="checkRecovery()" class="btn-alert">カギを再設定する</button>
-            <button onclick="location.reload()" class="btn-sub">戻る</button>
         </div>
     </div>
 </div>
 
-<div id="app-screen" style="display:none;">
+<div id="app-screen" class="container" style="display:none;">
+    
     <div class="card no-print">
-        <h2>新規登録</h2>
+        <h2>新しいパスワードを登録</h2>
+
         <label>サービス名</label>
-        <input type="text" id="s-name" placeholder="例：ドコモ、銀行">
-        <label>ID / 番号</label>
-        <input type="text" id="s-id">
+        <input type="text" id="service-name" placeholder="例：ドコモ、楽天、銀行">
+
+        <label>ID（アイディー）</label>
+        <input type="text" id="service-id" placeholder="メールアドレスや番号">
+
         <label>パスワード</label>
-        <div style="display:flex; gap:5px;">
-            <input type="text" id="s-pass">
-            <button onclick="makePass()" style="width:100px; padding:5px; margin:0; font-size:1em;">自動作成</button>
+        <div style="display:flex; gap:10px; align-items:center; margin-bottom:25px;">
+            <input type="text" id="service-pass" placeholder="パスワード" style="margin-bottom:0;">
+            <button onclick="genPass()" class="btn-auto">自動生成</button>
         </div>
-        <label>もしもの時の対応</label>
-        <select id="s-act">
-            <option>家族に任せる</option>
-            <option>すぐに解約してください</option>
-            <option>中身を確認してください</option>
+
+        <label>もしもの時、どうしますか？</label>
+        <select id="legacy-action">
+            <option value="家族に任せる">家族に任せる</option>
+            <option value="解約（親族にて）してください">解約（親族にて）してください</option>
+            <option value="解約（第三者にて）解約してください">解約（第三者にて）解約してください</option>
         </select>
-        <button onclick="addCard()" class="btn-main">保存する</button>
+
+        <button onclick="saveData()" class="btn-regist">保存する</button>
     </div>
 
-    <div class="card no-print" style="background:#e8f5e9; border-color:#28a745;">
-        <h2>家族へ渡す準備</h2>
-        <p>印刷するか、PDFで保存できます。</p>
-        <button onclick="window.print()" class="btn-sub" style="background:#28a745;">家族共有シートを作る</button>
+    <div class="card no-print" style="text-align:center; background:#f0fff4; border-color:#38a169;">
+        <h2 style="border:none; color:#2f855a; font-size:1.2em;">家族へ渡す準備</h2>
+        <p style="margin-bottom:10px;">印刷画面を開きます</p>
+        <button onclick="doPrint()" class="btn-family">家族共有シートを作成</button>
     </div>
 
-    <h2>登録リスト</h2>
-    <div id="list"></div>
+    <div class="container">
+        <h2 style="margin-top:30px;">登録済みリスト（<span id="count">0</span>件）</h2>
+        <div id="list-container"></div>
+    </div>
 </div>
 
 <script>
-    // --- 起動処理 ---
     const KEY_PIN = 'passSenior_PIN';
-    const KEY_Q = 'passSenior_Q';
-    const KEY_A = 'passSenior_A';
     const KEY_DATA = 'passSenior_Data';
 
-    checkState();
+    // 起動時チェック
+    init();
 
-    function checkState() {
+    function init() {
         const pin = localStorage.getItem(KEY_PIN);
         if (!pin) {
             document.getElementById('setup-mode').style.display = 'block';
@@ -123,24 +260,55 @@
         }
     }
 
-    // --- セットアップ ---
-    function setupApp() {
-        const pin = document.getElementById('new-pin').value;
-        const q = document.getElementById('secret-q').value;
-        const a = document.getElementById('secret-a').value;
+    // --- カスタムダイアログ機能 ---
+    function showModal(msg, isConfirm = false, yesCallback = null) {
+        const overlay = document.getElementById('custom-modal-overlay');
+        const msgDiv = document.getElementById('modal-msg');
+        const btnsDiv = document.getElementById('modal-btns');
 
-        if(pin.length !== 4) { alert("カギは数字4ケタにしてください"); return; }
-        if(!a) { alert("秘密の質問の答えを入れてください"); return; }
+        msgDiv.innerHTML = msg.replace(/\n/g, '<br>');
+        btnsDiv.innerHTML = "";
 
-        localStorage.setItem(KEY_PIN, pin);
-        localStorage.setItem(KEY_Q, q);
-        localStorage.setItem(KEY_A, a);
+        if (isConfirm) {
+            // 確認ダイアログ (Yes/No)
+            const btnYes = document.createElement('button');
+            btnYes.className = 'btn-modal btn-regist';
+            btnYes.innerText = 'はい';
+            btnYes.onclick = function() { overlay.style.display = 'none'; if(yesCallback) yesCallback(); };
+            
+            const btnNo = document.createElement('button');
+            btnNo.className = 'btn-modal btn-cancel';
+            btnNo.innerText = 'いいえ';
+            btnNo.onclick = function() { overlay.style.display = 'none'; };
 
-        alert("設定しました！\n忘れないようにしてください。");
-        location.reload();
+            btnsDiv.appendChild(btnNo);
+            btnsDiv.appendChild(btnYes);
+        } else {
+            // 通知ダイアログ (OKのみ)
+            const btnOk = document.createElement('button');
+            btnOk.className = 'btn-modal btn-regist';
+            btnOk.innerText = 'OK';
+            btnOk.onclick = function() { overlay.style.display = 'none'; };
+            btnsDiv.appendChild(btnOk);
+        }
+        overlay.style.display = 'flex';
     }
 
-    // --- ロック解除 ---
+    // --- ロック機能 ---
+    function setupApp() {
+        const pin = document.getElementById('new-pin').value;
+        if(pin.length < 4) {
+            showModal("カギは数字4ケタ以上にしてください");
+            return;
+        }
+        localStorage.setItem(KEY_PIN, pin);
+        showModal("設定しました！\n忘れないようにしてください。", false, function(){
+            location.reload();
+        });
+        // 即座にリロードせずともUI切り替えでも良いが、確実性のため
+        setTimeout(() => location.reload(), 1500);
+    }
+
     function unlockApp() {
         const input = document.getElementById('input-pin').value;
         const correct = localStorage.getItem(KEY_PIN);
@@ -149,93 +317,137 @@
             document.getElementById('app-screen').style.display = 'block';
             renderList();
         } else {
-            alert("カギが違います");
+            showModal("カギが違います");
+            document.getElementById('input-pin').value = "";
         }
     }
 
-    // --- 救済モード ---
-    function showRecovery() {
-        document.getElementById('unlock-mode').style.display = 'none';
-        document.getElementById('recovery-mode').style.display = 'block';
-        
-        // 質問文の表示変換
-        const qKey = localStorage.getItem(KEY_Q);
-        const qMap = {
-            "mom": "母親の旧姓は？",
-            "school": "通っていた小学校の名前は？",
-            "food": "一番好きな食べ物は？",
-            "pet": "初めて飼ったペットの名前は？"
-        };
-        document.getElementById('recovery-q-text').innerText = qMap[qKey];
-    }
-
-    function checkRecovery() {
-        const inputA = document.getElementById('recovery-a').value;
-        const correctA = localStorage.getItem(KEY_A);
-
-        if(inputA === correctA) {
-            alert("正解です！\n新しいカギを設定してください。");
-            // データは消さずに、PINだけ消してセットアップへ戻す
-            localStorage.removeItem(KEY_PIN);
-            location.reload();
-        } else {
-            alert("答えが違います...");
-        }
-    }
-
-    // --- アプリ機能 (簡易版) ---
-    function makePass() {
-        const c = "abcdefghijkmnpqrstuvwxyz23456789";
-        let p = "";
-        for(i=0;i<8;i++) p+=c[Math.floor(Math.random()*c.length)];
-        document.getElementById('s-pass').value = p;
-    }
-
-    function addCard() {
-        const name = document.getElementById('s-name').value;
-        const id = document.getElementById('s-id').value;
-        const pass = document.getElementById('s-pass').value;
-        const act = document.getElementById('s-act').value;
-        if(!name || !pass) return;
-
-        const list = JSON.parse(localStorage.getItem(KEY_DATA)) || [];
-        list.push({name, id, pass, act});
-        localStorage.setItem(KEY_DATA, JSON.stringify(list));
-        
-        document.getElementById('s-name').value = "";
-        document.getElementById('s-id').value = "";
-        document.getElementById('s-pass').value = "";
-        renderList();
-        alert("保存しました");
-    }
-
-    function renderList() {
-        const list = JSON.parse(localStorage.getItem(KEY_DATA)) || [];
-        const div = document.getElementById('list');
-        div.innerHTML = "";
-        list.forEach((item, idx) => {
-            div.innerHTML += `
-            <div class="item-card">
-                <div style="font-weight:bold; color:#0056b3; margin-bottom:5px;">${item.name}</div>
-                <div style="font-size:0.9em; color:#d9534f;">もしも：${item.act}</div>
-                <div class="data-row">ID: ${item.id}</div>
-                <div class="data-row">PASS: ${item.pass}</div>
-                <div class="no-print" style="text-align:right; margin-top:5px;">
-                    <button onclick="delCard(${idx})" style="width:auto; padding:5px 10px; font-size:1em; background:#d9534f; margin:0;">削除</button>
-                </div>
-            </div>`;
+    function resetConfirm() {
+        showModal("【重要】\nパスワードを忘れた場合、データを全て削除して初期化する必要があります。\n\n実行しますか？", true, function(){
+            showModal("本当に削除してよろしいですか？\nデータは復元できません。", true, function(){
+                localStorage.removeItem(KEY_PIN);
+                localStorage.removeItem(KEY_DATA);
+                alert("初期化しました"); // ここだけは最後の最後なのでalertでも許容、またはリロード
+                location.reload();
+            });
         });
     }
 
-    function delCard(idx) {
-        if(confirm("削除しますか？")) {
-            const list = JSON.parse(localStorage.getItem(KEY_DATA)) || [];
-            list.splice(idx, 1);
-            localStorage.setItem(KEY_DATA, JSON.stringify(list));
-            renderList();
+    // --- パスワード生成 ---
+    function genPass() {
+        const chars = "abcdefghijkmnpqrstuvwxyz23456789";
+        let pass = "";
+        for(let i=0; i<8; i++){
+            pass += chars[Math.floor(Math.random() * chars.length)];
+        }
+        document.getElementById('service-pass').value = pass;
+    }
+
+    // --- 保存処理 ---
+    function saveData() {
+        const name = document.getElementById('service-name').value;
+        const id = document.getElementById('service-id').value;
+        const pass = document.getElementById('service-pass').value;
+        const action = document.getElementById('legacy-action').value;
+
+        if(!name || !pass){
+            showModal("サービス名とパスワードを\n入力してください");
+            return;
+        }
+
+        const list = JSON.parse(localStorage.getItem(KEY_DATA)) || [];
+        list.push({ name, id, pass, action, date: new Date().toLocaleDateString() });
+        localStorage.setItem(KEY_DATA, JSON.stringify(list));
+
+        // クリア
+        document.getElementById('service-name').value = "";
+        document.getElementById('service-id').value = "";
+        document.getElementById('service-pass').value = "";
+        
+        renderList();
+        
+        // 保存完了モーダル
+        showModal("保存しました！");
+    }
+
+    // --- リスト表示 ---
+    function renderList() {
+        const list = JSON.parse(localStorage.getItem(KEY_DATA)) || [];
+        document.getElementById('count').innerText = list.length;
+        const container = document.getElementById('list-container');
+        container.innerHTML = "";
+
+        list.forEach((item, index) => {
+            const html = `
+            <div class="item-card">
+                <div class="item-title-row">
+                    <span class="item-name">${item.name}</span>
+                    <button class="btn-del no-print" onclick="deleteData(${index})">削除</button>
+                </div>
+
+                <div class="legacy-info">
+                    もしもの時： ${item.action}
+                </div>
+
+                <div class="data-row" onclick="copyText('${item.id}')">
+                    <span style="font-weight:bold;">ID: ${item.id}</span>
+                    <span class="copy-hint no-print">タップしてコピー</span>
+                </div>
+
+                <div class="data-row" onclick="copyText('${item.pass}')">
+                    <div style="display:flex; align-items:center;">
+                        <span style="margin-right:10px;">PASS: </span>
+                        <span class="masked-pass" id="mask-${index}">●●●●●●</span>
+                        <span class="real-pass" id="real-${index}" style="display:none; font-weight:bold;">${item.pass}</span>
+                    </div>
+                    <div class="no-print" style="display:flex; align-items:center;">
+                        <span class="eye-icon" onclick="event.stopPropagation(); togglePass(${index})" style="font-size:1.5em; padding:0 15px;">👁️</span>
+                        <span class="copy-hint">タップしてコピー</span>
+                    </div>
+                </div>
+            </div>`;
+            container.innerHTML += html;
+        });
+    }
+
+    // --- パスワード表示切替 ---
+    function togglePass(index) {
+        const mask = document.getElementById(`mask-${index}`);
+        const real = document.getElementById(`real-${index}`);
+        if(real.style.display === "none") {
+            real.style.display = "inline";
+            mask.style.display = "none";
+        } else {
+            real.style.display = "none";
+            mask.style.display = "inline";
         }
     }
-</script>
 
+    // --- コピー機能（トースト表示） ---
+    function copyText(text) {
+        navigator.clipboard.writeText(text).then(() => {
+            const t = document.getElementById('toast');
+            t.className = "show";
+            setTimeout(() => t.className = t.className.replace("show", ""), 2000);
+        });
+    }
+
+    // --- 削除 ---
+    function deleteData(index) {
+        showModal("本当に削除していいですか？", true, function(){
+            const list = JSON.parse(localStorage.getItem(KEY_DATA)) || [];
+            list.splice(index, 1);
+            localStorage.setItem(KEY_DATA, JSON.stringify(list));
+            renderList();
+        });
+    }
+
+    // --- 印刷機能 ---
+    function doPrint() {
+        // 印刷プレビューを呼び出す
+        window.print();
+    }
+
+</script>
 </body>
 </html>
