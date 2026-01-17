@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>かんたんパスワード管理 Senior V7</title>
+<title>かんたんパスワード管理 Senior V7.1</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 <style>
     /* --- 基本設定 --- */
@@ -60,6 +60,7 @@
     .btn-regist { background-color: #007bff; }
     .btn-family { background-color: #28a745; margin-top: 10px; }
     .btn-backup { background-color: #ed8936; } 
+    .btn-restore { background-color: #718096; } /* 紫系 */
     .btn-del { background-color: #e53e3e; width: auto; font-size: 1em; padding: 8px 16px; margin: 0; float: right; }
     .btn-sub { background-color: #718096; } 
     .btn-auto {
@@ -137,11 +138,12 @@
     #toast.show { visibility: visible; opacity: 1; }
 
     #restore-file { display: none; }
+    #restore-file-inapp { display: none; }
 
     @media print {
         @page { margin: 15mm; size: auto; }
         body { background: white; font-size: 12pt; padding: 0; }
-        .no-print, header, button, .copy-hint, .eye-icon, .warning-box, .app-header { display: none !important; }
+        .no-print, header, button, .copy-hint, .eye-icon, .warning-box, .app-header, .btn-restore { display: none !important; }
         .card { border: none; box-shadow: none; margin: 0; padding: 0; }
         .item-card { border: 1px solid #000; break-inside: avoid; margin-bottom: 15px; }
         .legacy-info { border: 1px solid #000; color: #000; background: none; }
@@ -177,7 +179,7 @@
         <div class="help-section">
             <div class="help-h">復元するには</div>
             <div class="help-p">
-                最初の画面の「バックアップから復元」ボタンから、保存したファイルを読み込んでください。
+                最初の画面、または便利機能の「バックアップ読み込み」から、保存したファイルを読み込んでください。
             </div>
         </div>
         <button onclick="document.getElementById('help-modal-overlay').style.display='none'" style="background:#444; margin-top:10px;">閉じる</button>
@@ -269,8 +271,13 @@
         <h2 style="border:none; color:#333; font-size:1.2em;">便利機能</h2>
         <button onclick="doPrint()" class="btn-family">家族共有シートを作成（印刷）</button>
         <p style="font-size:0.8em; margin:5px 0 15px;">紙に印刷したり、家族に送れます</p>
+        
         <button onclick="downloadBackup()" class="btn-backup">バックアップファイルを保存</button>
-        <p style="font-size:0.8em; margin:5px 0 0;">データが消えた時にこれを使うと戻ります</p>
+        <p style="font-size:0.8em; margin:5px 0 5px;">データが消えた時にこれを使うと戻ります</p>
+        
+        <button onclick="document.getElementById('restore-file-inapp').click()" class="btn-restore">📂 バックアップ読み込み（復元）</button>
+        <input type="file" id="restore-file-inapp" accept=".json" onchange="restoreFromFile(this)">
+
         <div class="staff-msg">
             <strong>店員またはご家族の方へ</strong><br>
             定期的にクラウドサービス（Googleドライブ等）へ<br>
@@ -318,14 +325,12 @@
         const a = document.getElementById('secret-a').value;
         if(pin.length < 4) { showModal("カギは数字4ケタ以上にしてください"); return; }
         if(!a) { showModal("「合言葉の答え」を入力してください"); return; }
-        showModal("設定しますか？\n(忘れないようにしてください)", true, function(){
-            const realKey = genKey(); currentRealKey = realKey;
-            localStorage.setItem(KEY_WRAPPED_PIN, encrypt(realKey, pin));
-            localStorage.setItem(KEY_WRAPPED_QA, encrypt(realKey, a));
-            localStorage.setItem(KEY_Q_ID, q);
-            saveList([]);
-            showModal("設定しました！\n忘れないようにしてください。", false, function(){ location.reload(); });
-        });
+        const realKey = genKey(); currentRealKey = realKey;
+        localStorage.setItem(KEY_WRAPPED_PIN, encrypt(realKey, pin));
+        localStorage.setItem(KEY_WRAPPED_QA, encrypt(realKey, a));
+        localStorage.setItem(KEY_Q_ID, q);
+        saveList([]);
+        showModal("設定しました！\n忘れないようにしてください。", false, function(){ location.reload(); });
     }
 
     function unlockApp() {
