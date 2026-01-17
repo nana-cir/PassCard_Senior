@@ -1,0 +1,293 @@
+ <!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>かんたんパスワード管理</title>
+<style>
+    /* --- ユニバーサルデザイン（見やすさ重視） --- */
+    body {
+        font-family: "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
+        background-color: #f0f4f8; /* 目に優しい薄い青グレー */
+        color: #111;
+        margin: 0;
+        padding: 15px;
+        line-height: 1.6;
+    }
+
+    /* 文字サイズを全体的に大きく */
+    h2 { font-size: 1.5em; margin: 0 0 10px 0; border-bottom: 2px solid #0056b3; padding-bottom: 5px; color: #0056b3; }
+    p { font-size: 1.1em; margin-bottom: 20px; }
+
+    /* --- カードスタイル --- */
+    .card {
+        background: #ffffff;
+        border: 2px solid #ccc;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    /* --- 入力フォーム --- */
+    label {
+        display: block;
+        font-weight: bold;
+        font-size: 1.2em; /* ラベル大きく */
+        margin-bottom: 8px;
+        color: #333;
+        background: #e6f2ff; /* ラベルの背景に色をつけて認識しやすく */
+        padding: 5px 10px;
+        border-radius: 4px;
+        border-left: 5px solid #0056b3;
+    }
+    
+    input[type="text"], select {
+        width: 100%;
+        padding: 15px;
+        font-size: 1.3em; /* 入力文字大きく */
+        border: 2px solid #888;
+        border-radius: 8px;
+        box-sizing: border-box;
+        margin-bottom: 20px;
+        background: #fff;
+    }
+    input:focus { border-color: #0056b3; background: #ffffdd; } /* 入力中は薄い黄色 */
+
+    /* --- ボタン（押しやすく巨大に） --- */
+    button {
+        cursor: pointer;
+        padding: 18px;
+        border: none;
+        border-radius: 10px;
+        font-size: 1.3em;
+        font-weight: bold;
+        width: 100%;
+        margin-bottom: 15px;
+        color: white;
+        box-shadow: 0 4px 0 rgba(0,0,0,0.2); /* 立体感 */
+    }
+    button:active { transform: translateY(4px); box-shadow: none; }
+
+    .btn-regist { background-color: #007bff; } /* 青 */
+    .btn-family { background-color: #28a745; margin-top: 20px; } /* 緑 */
+    .btn-del { background-color: #dc3545; width: auto; font-size: 1em; padding: 10px 20px; margin: 0;} /* 赤 */
+    .btn-copy { background-color: #6c757d; font-size: 1em; padding: 8px; margin-bottom: 0; width: auto;} 
+
+    /* --- リスト表示 --- */
+    .item-card {
+        background: #fff;
+        border: 2px solid #aaa;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    .item-title {
+        font-size: 1.4em;
+        font-weight: bold;
+        color: #0056b3;
+        margin-bottom: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .data-row {
+        background: #f9f9f9;
+        border: 1px solid #ddd;
+        padding: 10px;
+        margin-bottom: 10px;
+        font-size: 1.2em;
+        font-family: monospace; /* 数字を見やすく */
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    /* 終活・意向表示エリア */
+    .legacy-info {
+        background: #fff3cd; /* 注意を引く黄色 */
+        border: 1px solid #ffeeba;
+        color: #856404;
+        padding: 10px;
+        border-radius: 5px;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    /* --- 印刷・家族共有モード --- */
+    @media print {
+        body { background: white; font-size: 12pt; }
+        .no-print { display: none !important; } /* 入力欄やボタンを消す */
+        .card { border: none; box-shadow: none; margin: 0; padding: 0; }
+        .item-card { border: 1px solid #000; page-break-inside: avoid; }
+        .legacy-info { border: 1px solid #000; color: #000; background: none; }
+        h1, h2 { color: #000; border-bottom: 1px solid #000; }
+        /* 印刷時はパスワードを隠さない */
+        .masked-pass { display: none; }
+        .real-pass { display: inline !important; }
+    }
+</style>
+</head>
+<body>
+
+<div id="toast" style="position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#333; color:#fff; padding:15px 30px; border-radius:30px; display:none; font-size:1.2em; z-index:9999;">コピーしました</div>
+
+<div class="container no-print">
+    <div class="card">
+        <h2>新しいパスワードを登録</h2>
+        <p>忘れないように、ここに書き留めておきましょう。</p>
+
+        <label>何のパスワードですか？</label>
+        <input type="text" id="service-name" placeholder="例：ドコモ、楽天、銀行...">
+
+        <label>ID（アイディー）</label>
+        <input type="text" id="service-id" placeholder="メールアドレスや番号">
+
+        <label>パスワード</label>
+        <div style="display:flex; gap:10px; margin-bottom:20px;">
+            <input type="text" id="service-pass" placeholder="パスワードを入力">
+            <button onclick="genPass()" style="width:120px; padding:5px; font-size:1em; background:#666; margin:0;">自動で作る</button>
+        </div>
+
+        <label>もしもの時、どうしますか？</label>
+        <select id="legacy-action">
+            <option value="家族に任せる">家族に任せる</option>
+            <option value="解約してください">すぐに解約してください</option>
+            <option value="そのまま残してください">そのまま残してください</option>
+            <option value="中身を確認してください">中身を確認してください（重要）</option>
+        </select>
+
+        <button onclick="saveData()" class="btn-regist">この内容で保存する</button>
+    </div>
+
+    <div class="card" style="text-align:center; background:#e8f5e9; border-color:#28a745;">
+        <h2>家族へ渡す準備</h2>
+        <p>このボタンを押すと、印刷用画面になります。<br>印刷するか、PDFにして家族に送れます。</p>
+        <button onclick="window.print()" class="btn-family">家族への共有シートを作成</button>
+    </div>
+</div>
+
+<div class="container">
+    <h2 style="margin-top:30px;">登録済みリスト（<span id="count">0</span>件）</h2>
+    <div id="list-container"></div>
+</div>
+
+<script>
+    // --- 簡単なパスワード生成 ---
+    function genPass() {
+        // お年寄り向けなので、複雑すぎず、入力しやすい英数字8文字
+        const chars = "abcdefghijkmnpqrstuvwxyz23456789"; // 紛らわしい l,1,o,0 を除外
+        let pass = "";
+        for(let i=0; i<8; i++){
+            pass += chars[Math.floor(Math.random() * chars.length)];
+        }
+        document.getElementById('service-pass').value = pass;
+    }
+
+    // --- 保存 ---
+    function saveData() {
+        const name = document.getElementById('service-name').value;
+        const id = document.getElementById('service-id').value;
+        const pass = document.getElementById('service-pass').value;
+        const action = document.getElementById('legacy-action').value;
+
+        if(!name || !pass){ alert("名前とパスワードを入れてください"); return; }
+
+        const list = JSON.parse(localStorage.getItem('passCard_senior')) || [];
+        list.push({ name, id, pass, action, date: new Date().toLocaleDateString() });
+        localStorage.setItem('passCard_senior', JSON.stringify(list));
+
+        // クリア
+        document.getElementById('service-name').value = "";
+        document.getElementById('service-id').value = "";
+        document.getElementById('service-pass').value = "";
+        renderList();
+        alert("保存しました！");
+    }
+
+    // --- 表示 ---
+    function renderList() {
+        const list = JSON.parse(localStorage.getItem('passCard_senior')) || [];
+        document.getElementById('count').innerText = list.length;
+        const container = document.getElementById('list-container');
+        container.innerHTML = "";
+
+        list.forEach((item, index) => {
+            let actionColor = "#555";
+            if(item.action.includes("解約")) actionColor = "#d9534f"; // 赤
+            if(item.action.includes("確認")) actionColor = "#f0ad4e"; // オレンジ
+
+            const html = `
+            <div class="item-card">
+                <div class="item-title">
+                    ${item.name}
+                    <button class="btn-del no-print" onclick="deleteData(${index})">削除</button>
+                </div>
+
+                <div class="legacy-info" style="color:${actionColor}; border-color:${actionColor};">
+                    もしもの時： ${item.action}
+                </div>
+
+                <div>ID:</div>
+                <div class="data-row">
+                    <span>${item.id}</span>
+                    <button class="btn-copy no-print" onclick="copyText('${item.id}')">コピー</button>
+                </div>
+
+                <div>パスワード:</div>
+                <div class="data-row">
+                    <span class="masked-pass">●●●●●●</span> 
+                    <span class="real-pass no-print" id="pass-${index}" style="display:none;">${item.pass}</span>
+                    
+                    <div class="no-print">
+                        <button class="btn-copy" onclick="togglePass(${index})">見る</button>
+                        <button class="btn-copy" onclick="copyText('${item.pass}')">コピー</button>
+                    </div>
+                    <span class="print-only" style="display:none;">${item.pass}</span>
+                </div>
+            </div>`;
+            container.innerHTML += html;
+        });
+    }
+
+    // --- 補助機能 ---
+    function togglePass(index) {
+        const el = document.getElementById(`pass-${index}`);
+        el.style.display = el.style.display === "none" ? "inline" : "none";
+    }
+
+    function copyText(text) {
+        navigator.clipboard.writeText(text).then(() => {
+            const t = document.getElementById('toast');
+            t.style.display = 'block';
+            setTimeout(()=> t.style.display='none', 2000);
+        });
+    }
+
+    function deleteData(index) {
+        if(confirm("本当に消していいですか？")) {
+            const list = JSON.parse(localStorage.getItem('passCard_senior')) || [];
+            list.splice(index, 1);
+            localStorage.setItem('passCard_senior', JSON.stringify(list));
+            renderList();
+        }
+    }
+
+    // 印刷用CSS制御の補完
+    window.onbeforeprint = function() {
+        // 印刷前にパスワードを全て表示状態にする処理などをここに入れられますが
+        // CSSの @media print で .masked-pass を消して .real-pass (の中身) を出すように制御しています
+        // 簡易実装として、HTML内に印刷用の生パスワード埋め込みロジックを追加してあります
+        document.querySelectorAll('.print-only').forEach(e => e.style.display = 'inline');
+    };
+
+    window.onafterprint = function() {
+        document.querySelectorAll('.print-only').forEach(e => e.style.display = 'none');
+    };
+
+    // 初期表示
+    renderList();
+</script>
+</body>
+</html>
